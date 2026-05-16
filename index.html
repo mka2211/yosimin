@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>С Днём Рождения, Есимин! 💖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Montserrat:wght@100;300;400;600;900&family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            transition: background 0.8s ease;
+        }
+        .font-romantic { font-family: 'Pacifico', cursive; }
+        .font-cozy { font-family: 'Comfortaa', cursive; }
+        
+        /* Стили стеклянных панелей */
+        .premium-glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        }
+        .premium-glass:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px -12px var(--theme-glow);
+        }
+
+        /* Частицы за курсором */
+        .magic-particle {
+            position: fixed;
+            pointer-events: none;
+            opacity: 1;
+            transform: translate(-50%, -50%);
+            animation: floatAway 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            z-index: 9999;
+        }
+        @keyframes floatAway {
+            0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(0.2) translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Темы оформления */
+        .theme-rose {
+            --theme-glow: rgba(244, 63, 94, 0.25);
+            background: radial-gradient(circle at 50% 50%, #1a030f 0%, #050105 100%);
+        }
+        .theme-cyber {
+            --theme-glow: rgba(6, 182, 212, 0.25);
+            background: radial-gradient(circle at 50% 50%, #021622 0%, #000407 100%);
+        }
+        .theme-violet {
+            --theme-glow: rgba(168, 85, 247, 0.25);
+            background: radial-gradient(circle at 50% 50%, #120224 0%, #04000a 100%);
+        }
+
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(244, 63, 94, 0.4); }
+
+        #scratch-canvas {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="fill:white"><text y="20" font-size="20">🪙</text></svg>'), auto;
+        }
+
+        /* ==================== СИСТЕМА МЕДИА-ЗАПРОСОВ (MEDIA QUERIES) ==================== */
+        @media (max-width: 1024px) {
+            #app-body { padding-top: 2rem; padding-bottom: 2rem; }
+            #card-3d { max-w: 280px; }
+        }
+
+        @media (max-width: 768px) {
+            .font-romantic { font-size: 2.2rem !important; line-height: 1.2; }
+            #scratch-canvas { width: 100% !important; height: 100% !important; }
+            .premium-glass { p: 4px; }
+            #typewriter-placeholder { font-size: 13px !important; min-height: 180px; }
+        }
+
+        @media (max-width: 480px) {
+            .font-romantic { font-size: 1.8rem !important; }
+            #card-3d { max-width: 240px; aspect-ratio: 3/4; }
+            nav { justify-content: center; gap: 0.5rem; }
+            .nav-link { data-size: minified; padding: 6px 12px !important; font-size: 10px !important; }
+            header { padding-top: 0.75rem; }
+            #typewriter-placeholder { font-size: 12px !important; min-height: 220px; }
+        }
+
+        @media (max-height: 700px) and (orientation: landscape) {
+            #app-body { padding-top: 1rem; }
+            #card-3d { max-width: 180px; }
+        }
+    </style>
+</head>
+<body class="theme-rose text-white min-h-screen flex flex-col justify-between relative antialiased select-none">
+
+    <audio id="birthday-audio" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop></audio>
+
+    <div id="magic-canvas-container"></div>
+
+    <div id="loader-screen" class="fixed inset-0 z-50 bg-[#060106] flex flex-col items-center justify-center p-6 transition-all duration-1000">
+        <div class="w-full max-w-md text-center space-y-6">
+            <div class="relative w-24 h-24 mx-auto mb-4">
+                <div class="absolute inset-0 bg-rose-500 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                <div class="relative w-24 h-24 rounded-full bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center border border-white/10 shadow-2xl animate-bounce" style="animation-duration: 3s;">
+                    <i class="fa-solid fa-cake-candles text-3xl text-white"></i>
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <h2 class="text-xs font-bold tracking-widest uppercase text-gray-400">Инициализация праздничного пространства</h2>
+                <p id="loader-status" class="text-sm text-rose-300 h-5 font-light tracking-wide font-cozy">Подготовка поздравления для Есчки...</p>
+            </div>
+
+            <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden p-[1px]">
+                <div id="loader-bar" class="w-0 h-full bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 rounded-full transition-all duration-150 ease-out"></div>
+            </div>
+            
+            <span id="loader-percentage" class="text-[10px] font-mono text-gray-500 block">0%</span>
+        </div>
+    </div>
+
+
+    <header id="app-header" class="hidden opacity-0 z-20 w-full max-w-6xl mx-auto px-4 pt-6 transition-all duration-1000">
+        <div class="premium-glass rounded-3xl p-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+            
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/20 transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                    <i class="fa-solid fa-heart text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-romantic text-2xl text-rose-300">Esimin's Day ✨</h1>
+                    <p class="text-[9px] text-gray-400 tracking-widest uppercase font-bold">Официальное интерактивное поздравление</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/5 text-xs font-medium">
+                <button onclick="changeTheme('rose')" class="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 transition-all"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Розовый</button>
+                <button onclick="changeTheme('cyber')" class="px-3 py-1.5 rounded-xl hover:bg-cyan-500/10 text-cyan-400 transition-all"><i class="fa-solid fa-user-astronaut mr-1"></i> Космос</button>
+                <button onclick="changeTheme('violet')" class="px-3 py-1.5 rounded-xl hover:bg-purple-500/10 text-purple-400 transition-all"><i class="fa-solid fa-clover mr-1"></i> Неон</button>
+            </div>
+            
+            <nav class="flex flex-wrap gap-2">
+                <button onclick="navigate('pane-main')" id="nav-pane-main" class="nav-link px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-lg shadow-rose-600/20">
+                    <i class="fa-solid fa-envelope mr-1"></i> Письмо
+                </button>
+                <button onclick="navigate('pane-scratch')" id="nav-pane-scratch" class="nav-link px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-gift mr-1"></i> Открытка
+                </button>
+                <button onclick="navigate('pane-quest')" id="nav-pane-quest" class="nav-link px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-trophy mr-1"></i> Квест
+                </button>
+                <button onclick="navigate('pane-reasons')" id="nav-pane-reasons" class="nav-link px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-gem mr-1"></i> Почему ты?
+                </button>
+            </nav>
+        </div>
+    </header>
+
+
+    <main id="app-body" class="hidden opacity-0 z-10 w-full max-w-6xl mx-auto px-4 py-6 flex-grow flex items-center justify-center transition-all duration-1000">
+        
+        <section id="pane-main" class="pane-content w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <div class="lg:col-span-5 flex flex-col items-center gap-4">
+                <div id="card-3d" class="w-full max-w-xs aspect-[3/4] rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl bg-neutral-900 group transition-all duration-200 ease-out">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10 pointer-events-none"></div>
+                    
+                    <img src="./5206502838643662757_121.jpg" alt="Esimin Gorgeous" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+
+                    <div class="absolute top-4 right-4 z-20 bg-black/40 backdrop-blur-md border border-white/10 text-[9px] font-bold tracking-widest uppercase text-rose-300 px-3 py-1.5 rounded-full">
+                        <i class="fa-solid fa-cake-candles text-amber-400 mr-1 animate-pulse"></i> 16 Мая 2026
+                    </div>
+
+                    <div class="absolute bottom-6 left-6 right-6 z-20 space-y-1">
+                        <p class="text-xs text-rose-400 font-bold tracking-widest uppercase font-mono">Happy Birthday</p>
+                        <h3 class="text-3xl font-black tracking-tight text-white font-cozy">ЕСИМИН ❤️</h3>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-xs premium-glass rounded-2xl p-3 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div id="music-disc" class="w-9 h-9 bg-rose-500/20 rounded-xl flex items-center justify-center text-rose-400">
+                            <i class="fa-solid fa-compact-disc"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-bold">Музыкальная атмосфера</p>
+                            <p id="music-status-text" class="text-[9px] text-gray-400 font-mono">Выключена</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleRealMediaAudio()" id="music-btn" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-xs hover:bg-white/10 text-rose-400 transition-all">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 space-y-6">
+                <div class="premium-glass rounded-3xl p-6 md:p-8 relative overflow-hidden">
+                    <div class="absolute -right-16 -top-16 w-36 h-36 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <span class="text-[10px] font-bold tracking-widest uppercase text-rose-400 px-3 py-1 bg-rose-500/10 border border-rose-500/20 rounded-full inline-block mb-4">
+                        Главное Послание дня
+                    </span>
+                    
+                    <h2 class="text-3xl md:text-5xl font-romantic text-transparent bg-clip-text bg-gradient-to-r from-rose-300 via-pink-400 to-amber-200 mb-6">
+                        С Днём Рождения, Есчка!
+                    </h2>
+
+                    <div class="text-gray-300 font-light text-sm md:text-base leading-relaxed tracking-wide font-cozy">
+                        <p id="typewriter-placeholder"></p>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="text-center sm:text-left">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest font-mono">Послано флюидов счастья</h4>
+                            <p class="text-2xl font-bold text-rose-400 mt-1 font-cozy" id="heart-counter-text">0 💋</p>
+                        </div>
+                        <button onclick="addHeartKiss()" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 font-bold text-xs tracking-wider uppercase rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2">
+                            Отправить Мучи-Мучи 💋
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="premium-glass rounded-2xl p-4 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-sm"><i class="fa-solid fa-star"></i></div>
+                        <div>
+                            <h5 class="text-xs font-bold text-amber-300 font-mono">УРОВЕНЬ ПРЕВОСХОДСТВА</h5>
+                            <p class="text-xs text-gray-400 mt-0.5">Максимальный (Недосягаем)</p>
+                        </div>
+                    </div>
+                    <div class="premium-glass rounded-2xl p-4 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm"><i class="fa-solid fa-chart-line"></i></div>
+                        <div>
+                            <h5 class="text-xs font-bold text-cyan-400 font-mono">ГРАФИК СИЯНИЯ</h5>
+                            <p class="text-xs text-gray-400 mt-0.5">Стабильный рост каждую секунду</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="pane-scratch" class="pane-content w-full max-w-xl mx-auto hidden text-center space-y-6">
+            <div class="space-y-2">
+                <span class="px-3 py-1 rounded-full text-[9px] font-bold tracking-widest bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 uppercase font-mono">Secret Layer</span>
+                <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Защищенная Открытка 🪙</h2>
+                <p class="text-xs text-gray-400 max-w-sm mx-auto">
+                    Стирай серебряный слой пальцем или курсором, чтобы прочесть скрытое поздравление.
+                </p>
+            </div>
+
+            <div class="relative w-full aspect-[16/10] max-w-md mx-auto rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-neutral-900 p-1">
+                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-tr from-purple-950 via-neutral-900 to-rose-950 text-center space-y-4">
+                    <div class="w-12 h-12 bg-rose-500/20 rounded-full flex items-center justify-center text-rose-400 text-lg animate-pulse">
+                        <i class="fa-solid fa-gift"></i>
+                    </div>
+                    <h4 class="font-romantic text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-rose-300 to-pink-300">Секрет Раскрыт! 💎</h4>
+                    <p class="text-xs md:text-sm text-gray-300 leading-relaxed font-light font-cozy px-4">
+                        «Есимин, пусть этот год твоей жизни принесет тебе грандиозные победы, внутренний покой и бесконечные поводы для гордости за себя. Ты заслуживаешь быть абсолютно счастливой каждую секунду!»
+                    </p>
+                </div>
+                <canvas id="scratch-canvas" class="absolute inset-0 w-full h-full z-20 rounded-2xl transition-opacity duration-300"></canvas>
+            </div>
+            
+            <button onclick="resetScratchLayer()" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-semibold text-gray-400 hover:text-white transition-all">
+                Восстановить слой <i class="fa-solid fa-rotate-right ml-1"></i>
+            </button>
+        </section>
+
+
+        <section id="pane-quest" class="pane-content w-full max-w-lg mx-auto hidden">
+            <div class="premium-glass rounded-3xl p-6 md:p-8 text-center space-y-6 relative overflow-hidden" id="quest-card-container">
+                <div>
+                    <div class="w-12 h-12 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-center mx-auto text-purple-400 text-lg mb-3">
+                        <i class="fa-solid fa-puzzle-piece"></i>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold">Верификация Есимин 🧠</h3>
+                    <p class="text-xs text-gray-400 mt-1">Ответь на вопросы, чтобы подтвердить права администратора на этот день!</p>
+                </div>
+
+                <div class="flex items-center justify-between text-[10px] text-gray-500 font-mono">
+                    <span id="q-progress-txt">Вопрос 1 из 3</span>
+                    <span id="q-score-txt">Очки: 0</span>
+                </div>
+                <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div id="q-progress-bar" class="w-1/3 h-full bg-rose-500 transition-all duration-300"></div>
+                </div>
+
+                <div class="bg-black/40 border border-white/5 rounded-2xl p-5 min-h-[150px] flex flex-col justify-center items-center gap-3">
+                    <p id="q-question-text" class="text-sm font-semibold text-gray-200 leading-relaxed font-cozy">Загрузка...</p>
+                    <div id="q-options-container" class="w-full grid grid-cols-1 gap-2.5 mt-2"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="pane-reasons" class="pane-content w-full hidden space-y-6">
+            <div class="text-center max-w-md mx-auto space-y-2">
+                <span class="px-3 py-1 rounded-full text-[9px] font-bold tracking-widest bg-amber-500/10 border border-amber-500/20 text-amber-300 uppercase font-mono">Compliments Engine</span>
+                <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Почему ты исключительна? 🌸</h2>
+                <p class="text-xs text-gray-400">Нажимай на карточки, чтобы раскрыть грани твоей уникальности</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                <div onclick="revealCardMessage(this, 'Твоя улыбка способна моментально нейтрализовать любой негатив в радиусе километра. Она светится настоящим теплом. ✨')" class="premium-glass p-5 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[130px] group text-left">
+                    <div class="flex justify-between items-start w-full text-rose-400"><i class="fa-solid fa-face-smile text-lg"></i> <span class="text-[10px] font-mono text-gray-600 font-bold">01</span></div>
+                    <p class="text-xs font-semibold text-gray-300 mt-4 group-hover:text-white transition-colors font-cozy">Энергия и Обаяние</p>
+                </div>
+                <div onclick="revealCardMessage(this, 'Твой интеллект и умение анализировать вещи делают любой диалог с тобой захватывающим приключением. С тобой невероятно интересно. 🧠')" class="premium-glass p-5 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[130px] group text-left">
+                    <div class="flex justify-between items-start w-full text-purple-400"><i class="fa-solid fa-brain text-lg"></i> <span class="text-[10px] font-mono text-gray-600 font-bold">02</span></div>
+                    <p class="text-xs font-semibold text-gray-300 mt-4 group-hover:text-white transition-colors font-cozy">Глубина Мышления</p>
+                </div>
+                <div onclick="revealCardMessage(this, 'Твоему безупречному вкусу, стилю и грациозности во всем, что ты делаешь, можно только искренне позавидовать. Икона эстетики! 💎')" class="premium-glass p-5 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[130px] group text-left">
+                    <div class="flex justify-between items-start w-full text-cyan-400"><i class="fa-solid fa-gem text-lg"></i> <span class="text-[10px] font-mono text-gray-600 font-bold">03</span></div>
+                    <p class="text-xs font-semibold text-gray-300 mt-4 group-hover:text-white transition-colors font-cozy">Эстетика и Стиль</p>
+                </div>
+                <div onclick="revealCardMessage(this, 'Ты обладаешь редким внутренним стержнем и целеустремленностью. Ты обязательно добьешься всех своих грандиозных планов. 🚀')" class="premium-glass p-5 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[130px] group text-left">
+                    <div class="flex justify-between items-start w-full text-amber-400"><i class="fa-solid fa-rocket text-lg"></i> <span class="text-[10px] font-mono text-gray-600 font-bold">04</span></div>
+                    <p class="text-xs font-semibold text-gray-300 mt-4 group-hover:text-white transition-colors font-cozy">Сила Личности</p>
+                </div>
+                <div onclick="revealCardMessage(this, 'Твое умение искренне чувствовать, поддерживать и понимать людей — это дар, который делает тебя незаменимым человеком. 🫀')" class="premium-glass p-5 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[130px] group text-left">
+                    <div class="flex justify-between items-start w-full text-emerald-400"><i class="fa-solid fa-heart-pulse text-lg"></i> <span class="text-[10px] font-mono text-gray-600 font-bold">05</span></div>
+                    <p class="text-xs font-semibold text-gray-300 mt-4 group-hover:text-white transition-colors font-cozy">Искренность сердца</p>
+                </div>
+                <div onclick="revealCardMessage(this, 'Просто потому, что ты — это ты. Уникальная, неповторимая Есимин, аналогов которой нет ни в одной галактике вселенной. 🌌')" class="premium-glass p-5 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[130px] group text-left">
+                    <div class="flex justify-between items-start w-full text-pink-400"><i class="fa-solid fa-infinity text-lg"></i> <span class="text-[10px] font-mono text-gray-600 font-bold">06</span></div>
+                    <p class="text-xs font-semibold text-gray-300 mt-4 group-hover:text-white transition-colors font-cozy">Абсолютная Уникальность</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <footer id="app-footer" class="hidden opacity-0 z-20 w-full text-center py-4 border-t border-white/5 text-[9px] text-gray-500 font-mono tracking-widest transition-all duration-1000">
+        POWERED BY MUHAMMAD // CORE ENGINE v4.2 PREMIUM-MEDIA — FOR ESIMIN ONLY © 2026
+    </footer>
+
+
+    <script>
+        // ==================== 1. ЛОГИКА ЗАГРУЗЧИКА ====================
+        const loaderPhrases = [
+            "Подключение к серверу магии...",
+            "Оптимизация медиа-запросов под экран Есчки...",
+            "Поиск самой красивой фотографии в Душанбе...",
+            "Генерация 1000 причин для восхищения...",
+            "Калибровка звуковых частот поздравления...",
+            "Загрузка конфетти-систем...",
+            "Всё готово! Открытие праздничной вселенной..."
+        ];
+        
+        let currentProgress = 0;
+        let phraseIdx = 0;
+
+        function runLoaderEngine() {
+            const bar = document.getElementById('loader-bar');
+            const percentTxt = document.getElementById('loader-percentage');
+            const statusTxt = document.getElementById('loader-status');
+
+            const interval = setInterval(() => {
+                currentProgress += Math.floor(Math.random() * 5) + 1;
+                if (currentProgress > 100) currentProgress = 100;
+
+                bar.style.width = currentProgress + '%';
+                percentTxt.innerText = currentProgress + '%';
+
+                if (currentProgress > (phraseIdx + 1) * (100 / loaderPhrases.length) && phraseIdx < loaderPhrases.length - 1) {
+                    phraseIdx++;
+                    statusTxt.innerText = loaderPhrases[phraseIdx];
+                }
+
+                if (currentProgress === 100) {
+                    clearInterval(interval);
+                    setTimeout(showMainApplication, 500);
+                }
+            }, 30);
+        }
+
+        function showMainApplication() {
+            const loader = document.getElementById('loader-screen');
+            loader.classList.add('opacity-0', 'scale-95');
+            
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                
+                const header = document.getElementById('app-header');
+                const body = document.getElementById('app-body');
+                const footer = document.getElementById('app-footer');
+                
+                header.classList.remove('hidden');
+                body.classList.remove('hidden');
+                footer.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    header.classList.remove('opacity-0');
+                    body.classList.remove('opacity-0');
+                    footer.classList.remove('opacity-0');
+                    
+                    launchBirthdaySalute();
+                    startLetterTypewriter();
+                    init3DCardTiltEffect();
+                    initScratchCardEngine();
+                    initQuestGame();
+                }, 50);
+            }, 800);
+        }
+
+        window.addEventListener('DOMContentLoaded', runLoaderEngine);
+
+
+        // ==================== 2. СМЕНА ТЕМ ОФОРМЛЕНИЯ ====================
+        function changeTheme(themeName) {
+            document.body.className = `theme-${themeName} text-white min-h-screen flex flex-col justify-between relative antialiased select-none`;
+            let colors = ['#f43f5e', '#ec4899'];
+            if(themeName === 'cyber') colors = ['#06b6d4', '#3b82f6'];
+            if(themeName === 'violet') colors = ['#a855f7', '#8b5cf6'];
+            confetti({ particleCount: 25, spread: 50, colors: colors });
+        }
+
+
+        // ==================== 3. НАВИГАЦИЯ SPA СИСТЕМЫ ====================
+        function navigate(paneId) {
+            document.querySelectorAll('.pane-content').forEach(p => p.classList.add('hidden'));
+            document.getElementById(paneId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-link').forEach(btn => {
+                btn.className = "nav-link px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 text-gray-400 hover:text-white hover:bg-white/5";
+            });
+
+            const activeBtn = document.getElementById(`nav-${paneId}`);
+            activeBtn.className = "nav-link px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-lg shadow-rose-600/20";
+            
+            if(paneId === 'pane-scratch') {
+                setTimeout(initScratchCardEngine, 60);
+            }
+        }
+
+
+        // ==================== 4. ЭФФЕКТ ПЕЧАТНОЙ МАШИНКИ ДЛЯ ПИСЬМА ====================
+        const birthdayLetterContent = "Дорогая Есимин! Поздравляю тебя с этим потрясающим днем — твоим Днём Рождения! Сегодня, 16 мая 2026 года, весь этот цифровой интерактивный мир кружится исключительно вокруг тебя. Ты удивительный человек, сочетающий в себе редкую, глубокую мудрость, безупречный стиль и невероятную энергетику, способную вдохновлять. Желаю тебе космических успехов, реализации абсолютно всех планов и бесконечного личного счастья. Будь самой счастливой, улыбайся чаще и никогда не сомневайся в своей исключительности! С праздником! 🫀✨";
+        let letterCharIdx = 0;
+
+        function startLetterTypewriter() {
+            const container = document.getElementById('typewriter-placeholder');
+            if (letterCharIdx < birthdayLetterContent.length) {
+                container.innerHTML += birthdayLetterContent.charAt(letterCharIdx);
+                letterCharIdx++;
+                setTimeout(startLetterTypewriter, 30);
+            }
+        }
+
+
+        // ==================== 5. ИНТЕРАКТИВНЫЕ МУЧИ-МУЧИ ПОЦЕЛУИ ====================
+        let heartKissCounter = 0;
+        function addHeartKiss() {
+            heartKissCounter++;
+            document.getElementById('heart-counter-text').innerText = heartKissCounter + " 💋";
+            
+            confetti({
+                particleCount: 40,
+                angle: 60,
+                spread: 60,
+                origin: { x: 0, y: 0.8 },
+                colors: ['#ff0055', '#ff73a1']
+            });
+            confetti({
+                particleCount: 40,
+                angle: 120,
+                spread: 60,
+                origin: { x: 1, y: 0.8 },
+                colors: ['#ff0055', '#ff73a1']
+            });
+        }
+
+
+        // ==================== 6. РЕАЛЬНЫЙ МЕДИА-ДВИЖОК АУДИО ====================
+        let isAudioPlaying = false;
+        const audioNode = document.getElementById('birthday-audio');
+        const discIcon = document.getElementById('music-disc');
+        const statusLabel = document.getElementById('music-status-text');
+        const playBtn = document.getElementById('music-btn');
+
+        function toggleRealMediaAudio() {
+            if (!audioNode) return;
+            
+            if (!isAudioPlaying) {
+                audioNode.play().then(() => {
+                    isAudioPlaying = true;
+                    discIcon.classList.add('animate-spin');
+                    statusLabel.innerText = "Воспроизведение 🎵";
+                    statusLabel.classList.remove('text-gray-400');
+                    statusLabel.classList.add('text-rose-400');
+                    playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+                    confetti({ particleCount: 15, spread: 25 });
+                }).catch(err => console.log("Ошибка воспроизведения аудио медиа: ", err));
+            } else {
+                audioNode.pause();
+                isAudioPlaying = false;
+                discIcon.classList.remove('animate-spin');
+                statusLabel.innerText = "На паузе";
+                statusLabel.classList.remove('text-rose-400');
+                statusLabel.classList.add('text-gray-400');
+                playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+            }
+        }
+
+
+        // ==================== 7. ИНТЕРАКТИВНАЯ СКРЕТЧ-КАРТА (CANVAS ENGINE) ====================
+        let isScratching = false;
+        let scratchCanvas, scratchCtx;
+
+        function initScratchCardEngine() {
+            scratchCanvas = document.getElementById('scratch-canvas');
+            if(!scratchCanvas) return;
+            scratchCtx = scratchCanvas.getContext('2d');
+            
+            scratchCanvas.width = scratchCanvas.parentElement.offsetWidth;
+            scratchCanvas.height = scratchCanvas.parentElement.offsetHeight;
+            
+            const matrixGrad = scratchCtx.createLinearGradient(0, 0, scratchCanvas.width, scratchCanvas.height);
+            matrixGrad.addColorStop(0, '#94a3b8');
+            matrixGrad.addColorStop(0.5, '#e2e8f0');
+            matrixGrad.addColorStop(1, '#64748b');
+            
+            scratchCtx.fillStyle = matrixGrad;
+            scratchCtx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+            
+            scratchCtx.font = "bold 13px Montserrat";
+            scratchCtx.fillStyle = "#1e293b";
+            scratchCtx.textAlign = "center";
+            scratchCtx.fillText("СОТРИ СЛОЙ МОНЕТКОЙ 🪙", scratchCanvas.width / 2, scratchCanvas.height / 2 + 5);
+
+            scratchCanvas.addEventListener('mousedown', startScratchAction);
+            scratchCanvas.addEventListener('mousemove', executeScratchDrawing);
+            scratchCanvas.addEventListener('mouseup', stopScratchAction);
+            
+            scratchCanvas.addEventListener('touchstart', (e) => { startScratchAction(e.touches[0]); });
+            scratchCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); executeScratchDrawing(e.touches[0]); });
+            scratchCanvas.addEventListener('touchend', stopScratchAction);
+        }
+
+        function startScratchAction(e) { isScratching = true; executeScratchDrawing(e); }
+        function stopScratchAction() { isScratching = false; scratchCtx.beginPath(); }
+        
+        function executeScratchDrawing(e) {
+            if(!isScratching) return;
+            
+            const coordinates = scratchCanvas.getBoundingClientRect();
+            const posX = (e.clientX || e.pageX) - coordinates.left;
+            const posY = (e.clientY || e.pageY) - coordinates.top;
+            
+            scratchCtx.globalCompositeOperation = 'destination-out';
+            scratchCtx.lineWidth = 45; 
+            scratchCtx.lineCap = 'round';
+            
+            scratchCtx.lineTo(posX, posY);
+            scratchCtx.stroke();
+            scratchCtx.beginPath();
+            scratchCtx.moveTo(posX, posY);
+        }
+
+        function resetScratchLayer() { initScratchCardEngine(); }
+
+
+        // ==================== 8. ПРАЗДНИЧНЫЙ КВЕСТ (ИГРА-ВЕРИФИКАЦИЯ) ====================
+        const questDatabase = [
+            {
+                q: "Каков твой официальный статус в этой цифровой вселенной?",
+                a: ["Обычный гость", "Абсолютная Муза и Королева дня 👑", "Случайный прохожий"],
+                right: 1
+            },
+            {
+                q: "What happens to the stars when you smile?",
+                a: ["Они начинают светить в два раза ярче ✨", "Они падают вниз", "Ничего не происходит"],
+                right: 0
+            },
+            {
+                q: "Каков главный манифест сегодняшнего дня 16 мая?",
+                a: ["Быть максимально счастливой и верить в свою исключительность! 🫀", "Пойти делать уроки", "Провести день в заботах"],
+                right: 0
+            }
+        ];
+
+        let activeQuestionIdx = 0;
+        let questUserScore = 0;
+
+        function initQuestGame() {
+            activeQuestionIdx = 0;
+            questUserScore = 0;
+            renderQuestQuestion();
+        }
+
+        function renderQuestQuestion() {
+            const title = document.getElementById('q-question-text');
+            const container = document.getElementById('q-options-container');
+            const textProgress = document.getElementById('q-progress-txt');
+            const textScore = document.getElementById('q-score-text');
+            const innerBar = document.getElementById('q-progress-bar');
+
+            if(activeQuestionIdx >= questDatabase.length) {
+                renderFinalCertificate();
+                return;
+            }
+
+            textProgress.innerText = `Вопрос ${activeQuestionIdx + 1} из ${questDatabase.length}`;
+            textScore.innerText = `Очки: ${questUserScore}`;
+            innerBar.style.width = ((activeQuestionIdx + 1) / questDatabase.length) * 100 + '%';
+
+            const data = questDatabase[activeQuestionIdx];
+            title.innerText = data.q;
+            container.innerHTML = '';
+
+            data.a.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left px-4 py-3.5 bg-white/5 hover:bg-rose-500/20 border border-white/5 rounded-xl text-xs font-medium transition-all duration-200 active:scale-98 font-cozy";
+                button.innerText = option;
+                button.onclick = () => handleQuestAnswerSelection(index);
+                container.appendChild(button);
+            });
+        }
+
+        function handleQuestAnswerSelection(chosenIndex) {
+            const rightIndex = questDatabase[activeQuestionIdx].right;
+            if(chosenIndex === rightIndex) {
+                questUserScore += 100;
+                confetti({ particleCount: 20, spread: 30, colors: ['#f43f5e', '#a855f7'] });
+            }
+            activeQuestionIdx++;
+            renderQuestQuestion();
+        }
+
+        function renderFinalCertificate() {
+            const card = document.getElementById('quest-card-container');
+            card.innerHTML = `
+                <div class="space-y-6 py-6 animate-pulse" style="animation-duration: 2s;">
+                    <div class="w-16 h-16 bg-gradient-to-tr from-amber-400 to-amber-600 rounded-full flex items-center justify-center mx-auto text-white text-2xl shadow-xl">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-2xl font-romantic text-amber-300">Доступ Верифицирован!</h3>
+                        <p class="text-xs text-gray-300 font-light font-cozy px-4 leading-relaxed">
+                            Система подтвердила подлинность пользователя. Тебе официально присуждается статус <b>Лучшей Девушки Галактики</b>. Права администратора на счастье выданы бессрочно!
+                        </p>
+                    </div>
+                    <div class="p-3.5 border border-amber-500/30 bg-amber-500/5 rounded-2xl max-w-xs mx-auto text-[11px] font-mono font-bold text-amber-200 tracking-wider">
+                        🏆 СЕРТИФИКАТ ВЫДАН ЕСЧКЕ
+                    </div>
+                </div>
+            `;
+            launchBirthdaySalute();
+        }
+
+
+        // ==================== 9. КЛИК НА КАРТОЧКИ С КОМПЛИМЕНТАМИ ====================
+        function revealCardMessage(element, textMessage) {
+            element.style.transform = "scale(0.95)";
+            setTimeout(() => {
+                element.innerHTML = `
+                    <p class="text-xs font-medium text-rose-200 leading-relaxed font-cozy">${textMessage}</p>
+                `;
+                element.style.transform = "scale(1)";
+                element.onclick = null;
+                confetti({ particleCount: 10, spread: 15 });
+            }, 150);
+        }
+
+
+        // ==================== 10. ШЛЕЙФ КУРСОРНЫХ ЧАСТИЦ ====================
+        const particlesSymbols = ['❤️', '✨', '💖', '🌸', '💋'];
+        const spaceContainer = document.getElementById('magic-canvas-container');
+
+        window.addEventListener('mousemove', (e) => {
+            if (Math.random() > 0.15) return; 
+
+            const item = document.createElement('div');
+            item.classList.add('magic-particle');
+            item.innerText = particlesSymbols[Math.floor(Math.random() * particlesSymbols.length)];
+            
+            item.style.left = e.clientX + 'px';
+            item.style.top = e.clientY + 'px';
+            item.style.fontSize = Math.random() * 14 + 10 + 'px';
+            
+            spaceContainer.appendChild(item);
+            setTimeout(() => { item.remove(); }, 1400);
+        });
+
+
+        // ==================== 11. 3D НАКЛОН СЛОЯ КАРТОЧКИ С ФОТО ====================
+        function init3DCardTiltEffect() {
+            const structure = document.getElementById('card-3d');
+            if(!structure) return;
+
+            structure.addEventListener('mousemove', (e) => {
+                const bounds = structure.getBoundingClientRect();
+                const mouseX = e.clientX - bounds.left;
+                const mouseY = e.clientY - bounds.top;
+                
+                const midX = bounds.width / 2;
+                const midY = bounds.height / 2;
+                
+                const tiltX = ((midY - mouseY) / midY) * 15;
+                const tiltY = ((mouseX - midX) / midX) * 15;
+
+                structure.style.transform = `perspective(800px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+
+            structure.addEventListener('mouseleave', () => {
+                structure.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+            });
+        }
+
+
+        // ==================== 12. МЕГА САЛЮТ СИСТЕМЫ КОНФЕТТИ ====================
+        function launchBirthdaySalute() {
+            const duration = 3.5 * 1000;
+            const timelineEnd = Date.now() + duration;
+            const configurations = { startVelocity: 25, spread: 360, ticks: 50, zIndex: 40 };
+
+            function getRange(min, max) { return Math.random() * (max - min) + min; }
+
+            const saluteInterval = setInterval(function() {
+                const remaining = timelineEnd - Date.now();
+                if (remaining <= 0) return clearInterval(saluteInterval);
+
+                const count = 50 * (remaining / duration);
+                confetti(Object.assign({}, configurations, { count, origin: { x: getRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, configurations, { count, origin: { x: getRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+    </script>
+</body>
+</html>
